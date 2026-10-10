@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fuzzy+Bubbles:wght@400;700&family=Gloria+Hallelujah&family=Special+Elite&family=Geist+Mono:wght@400;500;600&family=Martian+Mono:wght@400&family=TikTok+Sans:opsz,wdth,wght@12..36,100..150,300..900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=31">
+<link rel="stylesheet" href="styles.css?v=140">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -27,6 +27,7 @@
 
 <!-- NAV -->
 <div class="nav-wrap">
+  <i class="ear ear-l" aria-hidden="true"></i>
   <nav class="nav" aria-label="Primary">
     <a class="nav-logo" href="#top" aria-label="Home"><img src="assets/logo-nav.svg" alt=""></a>
     <img class="nav-div" src="assets/nav-divider.svg" alt="">
@@ -35,20 +36,57 @@
       <a class="tab is-active" href="#work" data-spy="work">Work</a>
       <a class="tab" href="#playground" data-spy="playground">Playground</a>
       <a class="tab" href="#about" data-spy="about">About</a>
-      <a class="tab" href="#" target="_blank" rel="noopener">Resume <img src="assets/redirect.svg" alt=""></a>
+      <a class="tab" href="#" target="_blank" rel="noopener">Resume <img src="assets/redirect-24.svg" alt=""></a>
     </div>
   </nav>
+  <i class="ear ear-r" aria-hidden="true"></i>
 </div>
 
 <main id="top">
 
 <!-- HERO -->
 <header class="hero" id="hero">
+  <canvas class="hero-light" aria-hidden="true"></canvas>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <!-- embossed lettering: soft drop shadow outside, a lit top bevel and a shaded bottom bevel inside each glyph -->
+    <filter id="txShadow" x="-2%" y="-10%" width="104%" height="130%" color-interpolation-filters="sRGB">
+      <feComponentTransfer in="SourceAlpha" result="shape"><feFuncA type="linear" slope="2.2"/></feComponentTransfer>
+      <!-- outer drop shadow (Figma: 0 2 4 @20%), cut out under the translucent letters -->
+      <feGaussianBlur in="shape" stdDeviation="2"/>
+      <feOffset dy="2"/>
+      <feComponentTransfer result="shadow"><feFuncA type="linear" slope=".24"/></feComponentTransfer>
+      <feComposite in="shadow" in2="shape" operator="out" result="outside"/>
+      <!-- top bevel: light catching the upper inner edge -->
+      <feOffset in="shape" dx=".6" dy="2.2" result="dn"/>
+      <feComposite in="shape" in2="dn" operator="out"/>
+      <feGaussianBlur stdDeviation=".7"/>
+      <feComposite in2="shape" operator="in"/>
+      <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .5 0" result="lit"/>
+      <!-- bottom bevel: shade along the lower inner edge -->
+      <feOffset in="shape" dx="-.6" dy="-2.4" result="up"/>
+      <feComposite in="shape" in2="up" operator="out"/>
+      <feGaussianBlur stdDeviation="1"/>
+      <feComposite in2="shape" operator="in"/>
+      <feColorMatrix values="0 0 0 0 0  0 0 0 0 .12  0 0 0 0 .05  0 0 0 .26 0" result="shade"/>
+      <!-- letter fill at 60%; bevels and shadow stay at full strength -->
+      <feComponentTransfer in="SourceGraphic" result="fill"><feFuncA type="linear" slope=".6"/></feComponentTransfer>
+      <feMerge><feMergeNode in="outside"/><feMergeNode in="fill"/><feMergeNode in="shade"/><feMergeNode in="lit"/></feMerge>
+    </filter>
+  </svg>
+  <div class="intro">
+    <p class="hi">Namaste, This is</p>
+    <div class="name-wrap" id="nameWrap">
+      <h1 class="name">
+        <span class="ln"><span class="tx">Vishal Shanbhag,</span></span>
+        <span class="ln"><span class="hl"><span class="tx">Product</span></span> <span class="since-wrap"><span class="tx">Designer</span><span class="since" aria-label="Since 2021"><svg class="loop" viewBox="0 0 120 36" aria-hidden="true"><path class="p1" pathLength="1" d="M68 4C42 2 11 5 6 16C2 27 28 33 60 33C92 33 116 27 114 17C112 8 93 3 50 6.5"/></svg><b>Since 2021</b></span></span></span>
+      </h1>
+    </div>
+  </div>
   <div class="stage-clip">
     <div class="stage" id="stage">
 
       <!-- realistic iPad: a book is open in the reader; hover to see the library -->
-      <div class="item ipad-item" id="ipad" data-depth="0.5" style="--e0:.7;left:-100px;top:125px;width:538.9px;height:538.9px">
+      <div class="item ipad-item" id="ipad" data-depth="0.5" style="--e0:.7;left:-91px;top:125px;width:538.9px;height:538.9px">
         <div class="rot" style="--r:-15deg">
           <div class="ipad3d">
             <i class="ip-btn pwr"></i><i class="ip-btn vol1"></i><i class="ip-btn vol2"></i>
@@ -56,8 +94,9 @@
               <div class="ip-bezel">
                 <i class="ip-cam"></i>
                 <div class="ip-screen">
+                  <div class="sb sb-fixed"><span>9:41</span><svg class="sb-ic" viewBox="0 0 34 10" aria-hidden="true"><g fill="currentColor"><rect x="0" y="6" width="2.2" height="4" rx=".6"/><rect x="3.4" y="4.4" width="2.2" height="5.6" rx=".6"/><rect x="6.8" y="2.6" width="2.2" height="7.4" rx=".6"/><rect x="10.2" y="0.8" width="2.2" height="9.2" rx=".6"/></g><path d="M16.5 3.2a6 6 0 0 1 8 0M18 5.2a3.8 3.8 0 0 1 5 0" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="20.5" cy="7.4" r="1" fill="currentColor"/><rect x="26" y="1.6" width="7" height="6" rx="1.4" fill="none" stroke="currentColor" stroke-width=".9" opacity=".6"/><rect x="26.9" y="2.5" width="4.6" height="4.2" rx=".8" fill="currentColor"/></svg></div>
                   <div class="reader">
-                    <div class="sb"><span>9:41</span><svg class="sb-ic" viewBox="0 0 34 10" aria-hidden="true"><g fill="currentColor"><rect x="0" y="6" width="2.2" height="4" rx=".6"/><rect x="3.4" y="4.4" width="2.2" height="5.6" rx=".6"/><rect x="6.8" y="2.6" width="2.2" height="7.4" rx=".6"/><rect x="10.2" y="0.8" width="2.2" height="9.2" rx=".6"/></g><path d="M16.5 3.2a6 6 0 0 1 8 0M18 5.2a3.8 3.8 0 0 1 5 0" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="20.5" cy="7.4" r="1" fill="currentColor"/><rect x="26" y="1.6" width="7" height="6" rx="1.4" fill="none" stroke="currentColor" stroke-width=".9" opacity=".6"/><rect x="26.9" y="2.5" width="4.6" height="4.2" rx=".8" fill="currentColor"/></svg></div>
+                    
                     <div class="tb"><span class="back">‹ Library</span><span class="ttl">Steal Like an Artist</span><span class="aa">aA</span></div>
                     <div class="pg">
                       <p class="chap">CHAPTER 1</p>
@@ -69,7 +108,7 @@
                     <div class="ft"><i><b></b></i><span>Page 14 of 160</span></div>
                   </div>
                   <div class="library" aria-hidden="true">
-                    <div class="sb"><span>9:41</span><svg class="sb-ic" viewBox="0 0 34 10" aria-hidden="true"><g fill="currentColor"><rect x="0" y="6" width="2.2" height="4" rx=".6"/><rect x="3.4" y="4.4" width="2.2" height="5.6" rx=".6"/><rect x="6.8" y="2.6" width="2.2" height="7.4" rx=".6"/><rect x="10.2" y="0.8" width="2.2" height="9.2" rx=".6"/></g><path d="M16.5 3.2a6 6 0 0 1 8 0M18 5.2a3.8 3.8 0 0 1 5 0" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="20.5" cy="7.4" r="1" fill="currentColor"/><rect x="26" y="1.6" width="7" height="6" rx="1.4" fill="none" stroke="currentColor" stroke-width=".9" opacity=".6"/><rect x="26.9" y="2.5" width="4.6" height="4.2" rx=".8" fill="currentColor"/></svg></div>
+                    
                     <h4>Library</h4>
                     <p class="shelf">Reading Now</p>
                     <div class="books">
@@ -77,7 +116,7 @@
                       <figure class="bk"><div class="cv cv-sapiens"><b>Sapiens</b><span>A Brief History of Humankind</span><img data-src="https://covers.openlibrary.org/b/isbn/9780062316097-L.jpg?default=false" alt="Sapiens"></div><figcaption>Sapiens<small>Yuval Noah Harari</small></figcaption></figure>
                       <figure class="bk"><div class="cv cv-hooked"><b>HOOKED</b><span>How to Build Habit-Forming Products</span><img data-src="https://covers.openlibrary.org/b/isbn/9781591847786-L.jpg?default=false" alt="Hooked"></div><figcaption>Hooked<small>Nir Eyal</small></figcaption></figure>
                     </div>
-                    <div class="tabs"><span class="on"><i></i>Home</span><span><i></i>Library</span><span><i></i>Store</span></div>
+                    <div class="tabs"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2 2.8 11a1 1 0 0 0 1.3 1.5l.9-.7V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-8.2l.9.7A1 1 0 0 0 21.2 11Z"/></svg>Home</span><span class="on"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="4.3" height="16.5" rx="1"/><rect x="8.4" y="6.2" width="4.3" height="14.3" rx="1"/><rect x="14" y="4.4" width="4.3" height="16" rx="1" transform="rotate(-14 16.1 12.4)"/></svg>Library</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 7V6a4 4 0 0 1 8 0v1h3a1 1 0 0 1 1 1.1l-1 11.2A2 2 0 0 1 17 21H7a2 2 0 0 1-2-1.7L4 8.1A1 1 0 0 1 5 7Zm2 0h4V6a2 2 0 0 0-4 0Z"/></svg>Book Store</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4a8 8 0 0 0-8 8v5a3 3 0 0 0 3 3h1a1 1 0 0 0 1-1v-5a1 1 0 0 0-1-1H6v-1a6 6 0 0 1 12 0v1h-2a1 1 0 0 0-1 1v5a1 1 0 0 0 1 1h1a3 3 0 0 0 3-3v-5a8 8 0 0 0-8-8Z"/></svg>Audiobooks</span><span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="m15 15 5 5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>Search</span></div>
                   </div>
                   <i class="glare"></i>
                 </div>
@@ -87,75 +126,75 @@
         </div>
       </div>
 
-      <!-- vinyl: hover to show the album art on the record and hear the track -->
-      <div class="item vinyl-item" id="vinyl" data-depth="0.3" style="--e0:.4;left:810px;top:20px;width:400px;height:400px">
+      <!-- vinyl: hover to spin it up and play; move away and it winds down (tap on touch, Enter on keyboard) -->
+      <div class="item vinyl-item" id="vinyl" data-depth="0.3" style="--e0:.4;left:770px;top:40px;width:400px;height:400px"
+           role="button" tabindex="0" aria-pressed="false" aria-label="Vinyl record — hover or press Enter to play Night Changes by One Direction">
         <div class="vinyl">
-          <div class="platter">
-            <img class="disc" src="assets/vinyl.png" alt="Vinyl record">
-            <i class="label"><img id="labelArt" alt=""></i>
+          <div class="record">
+            <div class="platter">
+              <i class="grooves"></i>
+              <i class="label"><img id="labelArt" alt=""></i>
+            </div>
+            <i class="sheen"></i>
+            <i class="spindle"></i>
           </div>
-          <i class="sheen"></i>
         </div>
         <div class="np" id="np" aria-live="polite"><span class="eq"><b></b><b></b><b></b></span><span id="npText">Night Changes · One Direction</span></div>
       </div>
 
-      <div class="item car-item" data-depth="1.1" style="--e0:.75;left:930px;top:374px;width:273.2px;height:273.2px">
-        <div class="rot" style="--r:-150deg"><div class="car"><img src="assets/car.png" alt="Toy car"><i class="shade" style="--m:url(assets/car.png)"></i></div></div>
-      </div>
-
-      <!-- tool stickers: click the Figma icon to open the stack -->
-      <div class="item stack-item" id="stack" data-depth="1.4" style="--e0:.5;left:161.24px;top:520.24px;width:153px;height:153px" role="button" tabindex="0" aria-expanded="false" aria-label="Figma sticker — click to show Claude and Notion">
-        <div class="stack">
-          <div class="st tile tile-notion"><img src="assets/tile-blank.png" alt=""><svg viewBox="0 0 100 100" aria-hidden="true"><rect x="22" y="20" width="64" height="68" rx="9" fill="#111" opacity=".9"/><rect x="14" y="12" width="64" height="68" rx="9" fill="#fff" stroke="#111" stroke-width="5"/><polygon points="29,66 29,27 37,27 56,52 56,27 64,27 64,66 56,66 37,41 37,66" fill="#111"/></svg></div>
-          <div class="st tile tile-claude"><img src="assets/tile-blank.png" alt=""><svg viewBox="-50 -50 100 100" aria-hidden="true"><defs><linearGradient id="cl-g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eb8d6c"/><stop offset="1" stop-color="#c4603f"/></linearGradient></defs><g stroke="url(#cl-g)" stroke-width="11" stroke-linecap="round"><line x1="0" y1="0" x2="38.62" y2="5.43"/><line x1="0" y1="0" x2="22.85" y2="17.85"/><line x1="0" y1="0" x2="13.86" y2="34.31"/><line x1="0" y1="0" x2="-3.76" y2="26.74"/><line x1="0" y1="0" x2="-24.63" y2="31.52"/><line x1="0" y1="0" x2="-27.82" y2="11.24"/><line x1="0" y1="0" x2="-37.63" y2="-5.29"/><line x1="0" y1="0" x2="-22.06" y2="-17.24"/><line x1="0" y1="0" x2="-14.61" y2="-36.16"/><line x1="0" y1="0" x2="4.04" y2="-28.72"/><line x1="0" y1="0" x2="22.16" y2="-28.37"/><line x1="0" y1="0" x2="25.03" y2="-10.11"/></g><circle r="9" fill="url(#cl-g)"/></svg></div>
-          <div class="st st3"><img src="assets/figma-sticker.png" alt=""></div>
-          <div class="st st2"><img src="assets/sticker-dark.png" alt=""></div>
-          <div class="st st1"><img src="assets/figma-sticker.png" alt="Figma"></div>
-        </div>
-      </div>
-
-      <!-- polaroid, held with tape -->
-      <div class="item static photo-item" style="--e0:.9;left:590.3px;top:87.9px;width:423.4px;height:490.2px">
+      <!-- polaroid (sits under the note, as in the design) -->
+      <div class="item static photo-item" style="--e0:.9;left:565.7px;top:108.2px;width:412.6px;height:449.8px">
         <div class="rot" style="--r:4deg">
           <div class="polaroid">
-            <div class="ph"><img src="assets/portrait.png" alt="Portrait of Vishal Shanbhag"></div>
-            <div class="cap"><p>Vishal Shanbhag</p><p>Product Designer</p></div>
-            <div class="est" aria-label="Established 2021">
-              <span class="oval"><img src="assets/est-oval.svg" alt=""></span>
-              <b>Est. 2021</b>
-            </div>
+            <div class="ph"><img src="assets/clay-designer.webp" alt="3D clay illustration of Vishal designing on a laptop and an iPad"><i class="glare"></i></div><i class="grain"></i>
+            <div class="cap"><p>Currently at Helo.ai</p></div>
+            <!-- washi tape holding the photo down (it is the one thing on the desk you cannot drag) -->
+            <i class="washi" aria-hidden="true"><b></b></i>
           </div>
         </div>
       </div>
 
-      <!-- tape across the polaroid's top-left corner (as in the design) -->
-      <img class="tape-fig" src="assets/tape-dark.png" alt="" aria-hidden="true">
-
-      <div class="item car-item" data-depth="1.1" style="--e0:.75;left:930px;top:374px;width:273.2px;height:273.2px">
-        <div class="rot" style="--r:-150deg"><div class="car"><img src="assets/car.png" alt="Toy car"><i class="shade" style="--m:url(assets/car.png)"></i></div></div>
-      </div>
-
       <!-- sticky note: pinned at the top, swings from the pin (see main.js) -->
-      <div class="pinned" id="notePin" style="--e0:.4;left:518.7px;top:112.8px;--rest:-5deg;--px:266px;--py:6px">
+      <div class="pinned" id="notePin" style="--e0:.4;left:521.3px;top:106.8px;--rest:-5deg;--px:289px;--py:2px">
         <div class="swing">
           <div class="card notepad" tabindex="0" aria-label="Sticky note, pinned. Drag to swing.">
-            <div class="np-paper"><img src="assets/notepad-bg.png" alt=""><i class="rules"></i><i class="grain"></i><i class="np-light"></i></div>
-            <p>Solving complex problems thoughtfully, with a love for craft and good design in everything I make.</p>
+            <!-- corner lift on hover (like a sheet whose corner bends up): shape + shading drawn in main.js -->
+            <svg class="np-lift-sh" viewBox="0 0 350 293" aria-hidden="true">
+              <defs><filter id="liftBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="8"/></filter></defs>
+              <path id="liftShadow" fill="rgba(10,14,6,.3)" filter="url(#liftBlur)" d=""/>
+            </svg>
+            <div class="np-sheet" id="npSheet">
+              <div class="np-paper"><img src="assets/notepad-figma.png" alt=""></div>
+              <i class="np-bend" aria-hidden="true"></i>
+              <p>Solving complex problems thoughtfully, with a love for craft and good design in everything I make.</p>
+            </div>
+
           </div>
         </div>
       </div>
       <div class="pin-fig" aria-hidden="true">
         <img class="pin-shadow" src="assets/pin-shadow.svg" alt="">
-        <div class="pin-head"><img src="assets/pin.png" alt=""></div>
+        <div class="pin-head"><img src="assets/pin-matte.png" alt=""></div>
       </div>
 
       <!-- succulent in a black pot -->
-      <div class="item plant-item" data-depth="0.6" style="--e0:1;left:231px;top:250px;width:473px;height:460px">
-        <div class="plant"><img src="assets/plant-pot-hd.png" alt="Succulent in a black pot"></div>
+      <div class="item plant-item" data-depth="0.6" style="--e0:1;left:312px;top:325px;width:290px;height:290px">
+        <div class="plant"><img src="assets/plant-topdown.webp" alt="Echeveria succulent in a terracotta pot, from above"></div>
       </div>
 
-      <div class="item smiley-item" data-depth="1" style="--e0:.3;left:138.5px;top:40.5px;width:169px;height:169px" id="smiley" role="button" tabindex="0" aria-label="Smiley sticker">
-        <div class="rot" style="--r:-15deg"><div class="smiley"><img src="assets/smiley.png" alt=""><i class="shade" style="--m:url(assets/smiley.png)"></i></div></div>
+      <div class="item smiley-item" data-depth="1" style="--e0:.3;left:103px;top:69px;width:169px;height:169px" id="smiley" role="button" tabindex="0" aria-label="Smiley sticker">
+        <div class="rot" style="--r:-15deg"><div class="smiley"><img class="sm-open" src="assets/smiley-patch.webp" alt=""><img class="sm-wink" src="assets/smiley-patch-wink.webp" alt=""></div></div>
+      </div>
+
+      <!-- the apps I use: a messy pile (Figma on top) that fans into a semicircle on hover -->
+      <div class="item stack-item" id="stack" data-depth="1.4" style="--e0:.5;left:923px;top:440px;width:118.7px;height:92.7px" role="button" tabindex="0" aria-expanded="false" aria-label="My stack — hover to fan out Figma, Claude, Notion and Procreate">
+        <div class="tools">
+          <span class="stack-label" aria-hidden="true">My stack</span>
+          <div class="tl" style="--i:3;--ox:5px;--oy:8px;--rr:16deg" data-tip="Procreate · Illustration"><i class="shade" style="--m:url(assets/tool-procreate.png)"></i><img src="assets/tool-procreate.png" alt="Procreate"></div>
+          <div class="tl" style="--i:2;--ox:-8px;--oy:5px;--rr:-13deg" data-tip="Notion · Knowledge base"><i class="shade" style="--m:url(assets/tool-notion.png)"></i><img src="assets/tool-notion.png" alt="Notion"></div>
+          <div class="tl" style="--i:1;--ox:7px;--oy:-5px;--rr:8deg" data-tip="Claude · AI research"><i class="shade" style="--m:url(assets/tool-claude.png)"></i><img src="assets/tool-claude.png" alt="Claude"></div>
+          <div class="tl" style="--i:0;--ox:-1px;--oy:0px;--rr:-5deg" data-tip="Figma · Design"><i class="shade" style="--m:url(assets/tool-figma.png)"></i><img src="assets/tool-figma.png" alt="Figma"></div>
+        </div>
       </div>
 
           </div>
@@ -256,10 +295,11 @@
   <div class="play-head">
     <h2 class="hand light">Playground</h2>
     <div class="chips" role="tablist" aria-label="Filter playground">
-      <button class="chip is-on" data-filter="all" role="tab" aria-selected="true"><img src="assets/ico-shapes.svg" alt="">All</button>
-      <button class="chip" data-filter="interfaces" role="tab" aria-selected="false"><img src="assets/ico-window.svg" alt="">Interfaces</button>
-      <button class="chip" data-filter="art" role="tab" aria-selected="false"><img src="assets/ico-swatch.svg" alt="">Art</button>
-      <button class="chip" data-filter="graphics" role="tab" aria-selected="false"><span class="ico-img"><img src="assets/ico-image.svg" alt=""></span>Graphics</button>
+      <span class="chip-pill" aria-hidden="true"></span>
+      <button class="chip is-on" data-filter="all" role="tab" aria-selected="true" tabindex="0"><img src="assets/ico-shapes.svg" alt=""><span class="chip-label">All</span></button>
+      <button class="chip" data-filter="interfaces" role="tab" aria-selected="false" tabindex="-1"><img src="assets/ico-window.svg" alt=""><span class="chip-label">Interfaces</span></button>
+      <button class="chip" data-filter="art" role="tab" aria-selected="false" tabindex="-1"><img src="assets/ico-swatch.svg" alt=""><span class="chip-label">Art</span></button>
+      <button class="chip" data-filter="graphics" role="tab" aria-selected="false" tabindex="-1"><span class="ico-img"><img src="assets/ico-image.svg" alt=""></span><span class="chip-label">Graphics</span></button>
     </div>
   </div>
 
@@ -268,35 +308,66 @@
 
       <figure class="pg" data-cat="art" data-big>
         <div class="pg-frame sq"><img src="assets/art1.png" alt="Illustration"></div>
-        <i class="tape tl"></i>
+        <i class="tape" style="--x:30%;--tr:-3deg"></i>
       </figure>
 
       <figure class="pg" data-cat="interfaces">
         <div class="pg-frame shot-fr"><img src="assets/art-screenshot.png" alt="Interface screenshot"></div>
-        <i class="tape tr"></i>
+        <i class="tape" style="--x:62%;--tr:2.5deg"></i>
       </figure>
 
       <figure class="pg" data-cat="graphics">
         <div class="pg-frame sq" style="--r:2deg"><img src="assets/art2.png" alt="Sandalwood poster"></div>
-        <i class="tape tr"></i>
+        <i class="tape" style="--x:50%;--tr:-1.5deg"></i>
       </figure>
 
       <figure class="pg" data-cat="art">
         <div class="pg-frame sm"><img src="assets/art1.png" alt="Illustration"><img class="over" src="assets/art1b.png" alt=""></div>
-        <i class="tape tl"></i>
+        <i class="tape" style="--x:34%;--tr:3deg"></i>
       </figure>
 
       <figure class="pg" data-cat="art">
         <div class="pg-frame sq" style="--r:-2deg"><img src="assets/art3.png" alt="Skull illustration"></div>
-        <i class="tape tr"></i>
-        <i class="tape bl"></i>
+        <i class="tape" style="--x:22%;--tr:-3.5deg"></i>
+        <i class="tape" style="--x:76%;--tr:2deg"></i>
       </figure>
 
     </div>
   </div>
 
-  <div class="hint" aria-hidden="true">drag or scroll →</div>
-  <div class="sprites" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="ticker">
+    <button class="tick prev" type="button" aria-label="Previous artwork"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 10H4M9 5l-5 5 5 5"/></svg></button>
+    <span class="hint" aria-hidden="true">drag or scroll</span>
+    <button class="tick next" type="button" aria-label="Next artwork"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h12M11 5l5 5-5 5"/></svg></button>
+  </div>
+  <!-- handling marks printed on the cardboard (ISO 780 style) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="inkStamp" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="3" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.1" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+      <feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="8" result="n2"/>
+      <feColorMatrix in="n2" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.3 1.48" result="speck"/>
+      <feComposite in="rough" in2="speck" operator="in"/>
+    </filter>
+  </svg>
+  <div class="marks" role="group" aria-label="Handling marks">
+    <button class="mark" type="button" aria-label="Fragile — handle with care">
+      <svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true"><defs><mask id="mkCrack"><rect width="48" height="48" fill="#fff"/><path d="M25 5l-3 6 4 3-3 6 3 3" fill="none" stroke="#000" stroke-width="2"/></mask></defs><g mask="url(#mkCrack)"><path d="M13 5h22l-1.6 11.5C32.3 23.8 28 28 24 28s-8.3-4.2-9.4-11.5z"/></g><rect x="22.6" y="27" width="2.8" height="12.5"/><path d="M15 43.5c2.5-3 15.5-3 18 0z"/></svg>
+      <span class="mark-tip" aria-hidden="true"><b>Fragile</b>Handle with care</span>
+    </button>
+    <button class="mark" type="button" aria-label="Keep dry — protect from moisture">
+      <svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true"><path d="M12 3.5l-2 5M24 1.5l-2 5M36 3.5l-2 5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M5 28C5 19 13.5 12.5 24 12.5S43 19 43 28c-3-3-6.2-3-9.5 0-3-3-6.5-3-9.5 0-3-3-6.5-3-9.5 0-3.3-3-6.5-3-9.5 0z"/><path d="M24 28v12.5c0 4.6-6.6 4.6-6.6 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+      <span class="mark-tip" aria-hidden="true"><b>Keep dry</b>Protect from moisture</span>
+    </button>
+    <button class="mark" type="button" aria-label="This side up — keep upright">
+      <svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true"><path d="M16 4.5l-7.5 11h5V38h5V15.5h5z"/><path d="M32 4.5l-7.5 11h5V38h5V15.5h5z"/><rect x="5" y="41" width="38" height="3.2" rx=".6"/></svg>
+      <span class="mark-tip" aria-hidden="true"><b>This side up</b>Keep upright</span>
+    </button>
+    <button class="mark" type="button" aria-label="Recyclable — made from recycled material">
+      <svg viewBox="0 0 48 48" fill="currentColor" aria-hidden="true"><g transform="rotate(0 24 25)"><path d="M11.76 19.29A13.5 13.5 0 0 1 30.75 13.31" fill="none" stroke="currentColor" stroke-width="4.6" stroke-linecap="butt"/><path d="M35.51 16.06L33.25 8.98L28.25 17.64Z"/></g><g transform="rotate(120 24 25)"><path d="M11.76 19.29A13.5 13.5 0 0 1 30.75 13.31" fill="none" stroke="currentColor" stroke-width="4.6" stroke-linecap="butt"/><path d="M35.51 16.06L33.25 8.98L28.25 17.64Z"/></g><g transform="rotate(240 24 25)"><path d="M11.76 19.29A13.5 13.5 0 0 1 30.75 13.31" fill="none" stroke="currentColor" stroke-width="4.6" stroke-linecap="butt"/><path d="M35.51 16.06L33.25 8.98L28.25 17.64Z"/></g></svg>
+      <span class="mark-tip" aria-hidden="true"><b>Recyclable</b>Made from recycled material</span>
+    </button>
+  </div>
 </section>
 
 <!-- ABOUT / CONNECT -->
@@ -323,6 +394,6 @@
 <div class="lightbox" id="lightbox" hidden><img alt=""><button aria-label="Close">×</button></div>
 <div class="toast" id="toast" role="status"></div>
 
-<script src="main.js?v=31"></script>
+<script src="main.js?v=140"></script>
 </body>
 </html>

@@ -10,7 +10,7 @@
   const stage = $('#stage');
   function fitStage() {
     const vw = innerWidth;
-    const s = clamp((vw - 40) / 1220, 0.42, 1);
+    const s = clamp((vw - 40) / 1160, 0.3, 1);
     root.style.setProperty('--s', s);
   }
   fitStage();
@@ -20,25 +20,7 @@
   const items = $$('.item:not(.static)', stage);
   let mx = 0, my = 0;
   const plant = $('.plant');
-  if (fine && !reduce) {
-    $('#hero').addEventListener('pointermove', e => {
-      const r = $('#hero').getBoundingClientRect();
-      mx = (e.clientX - r.left) / r.width - 0.5;
-      my = (e.clientY - r.top) / r.height - 0.5;
-      plant.style.setProperty('--tx', mx.toFixed(3));
-      plant.style.setProperty('--ty', my.toFixed(3));
-      items.forEach(it => {
-        if (it.classList.contains('dragging')) return;
-        const d = parseFloat(it.dataset.depth || 0) * 22;
-        it.style.setProperty('--px', (-mx * d).toFixed(1) + 'px');
-        it.style.setProperty('--py', (-my * d).toFixed(1) + 'px');
-      });
-    });
-    $('#hero').addEventListener('pointerleave', () => {
-      items.forEach(it => { it.style.setProperty('--px', '0px'); it.style.setProperty('--py', '0px'); });
-      plant.style.setProperty('--tx', 0); plant.style.setProperty('--ty', 0);
-    });
-  }
+  // (mouse parallax removed: objects stay put while the cursor moves)
 
   // scroll parallax (items drift at different speeds as the hero leaves)
   const hero = $('#hero');
@@ -47,7 +29,7 @@
     const y = clamp(scrollY, 0, hero.offsetHeight);
     items.forEach(it => {
       const d = parseFloat(it.dataset.depth || 0);
-      it.style.marginTop = (-y * 0.06 * d).toFixed(1) + 'px';
+      it.style.setProperty('--sy', (-y * 0.06 * d).toFixed(1) + 'px');   // transform-only, no re-layout
     });
   }
 
@@ -126,27 +108,182 @@
     music.fadeT = requestAnimationFrame(step);
   }
   async function playTrack() {
-    music.want = true; vinyl.classList.add('on');
+    music.want = true; vinyl.classList.add('on'); vinyl.setAttribute('aria-pressed', 'true'); spin.target = RPM * 6; kick();
     await loadMusic();
     if (!music.want || !music.audio) return;
     try { await music.audio.play(); fadeTo(0.55, 700); }
     catch { $('#npText').textContent = 'Click anywhere to play ♪'; }   // browsers block sound until the page is clicked once
   }
   function stopTrack() {
-    music.want = false; vinyl.classList.remove('on');
+    music.want = false; vinyl.classList.remove('on'); vinyl.setAttribute('aria-pressed', 'false'); spin.target = 0; kick();
     $('#npText').textContent = MUSIC.songName + ' · ' + MUSIC.artist;
     fadeTo(0, 450, () => { if (!music.want && music.audio) music.audio.pause(); });
   }
-  if (!reduce) {
-    let down;
-    vinyl.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') { loadMusic(); playTrack(); } });
-    vinyl.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') stopTrack(); });
-    vinyl.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; loadMusic(); });
-    vinyl.addEventListener('pointerup', e => {
-      // touch screens have no hover: a tap toggles the record
-      if (e.pointerType === 'touch' && down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 8) music.want ? stopTrack() : playTrack();
+  /* turntable physics: the record eases up to 33⅓ rpm, and winds down slowly when stopped */
+  const RPM = 33.3, platter = $('.platter', vinyl);
+  const spin = { a: 0, v: 0, target: 0, raf: 0, t: 0 };
+  function spinTick(t) {
+    const dt = Math.min((t - spin.t) / 1000, 0.05); spin.t = t;
+    const up = spin.target > spin.v;
+    spin.v += (spin.target - spin.v) * (1 - Math.exp(-dt / (up ? 0.45 : 1.3)));   // motor is quick, friction is slow
+    if (spin.target === 0 && spin.v < 1) spin.v = 0;
+    spin.a = (spin.a + spin.v * dt) % 360;
+    platter.style.setProperty('--a', spin.a.toFixed(2) + 'deg');
+    spin.raf = spin.v || spin.target ? requestAnimationFrame(spinTick) : 0;
+  }
+  function kick() { if (!spin.raf && !reduce) { spin.t = performance.now(); spin.raf = requestAnimationFrame(spinTick); } }
+  const toggle = () => music.want ? stopTrack() : playTrack();
+
+  // hover plays (spins up + fades the song in), leaving lets it wind down; touch screens tap to toggle
+  let down;
+  vinyl.addEventListener('pointerenter', e => { if (e.pointerType !== 'touch') playTrack(); });
+  vinyl.addEventListener('pointerleave', e => { if (e.pointerType !== 'touch') stopTrack(); });
+  vinyl.addEventListener('pointerdown', e => { down = { x: e.clientX, y: e.clientY }; loadMusic(); });
+  vinyl.addEventListener('pointerup', e => {
+    if (e.pointerType === 'touch' && down && Math.hypot(e.clientX - down.x, e.clientY - down.y) < 8) toggle();
+    down = null;
+  });
+  // browsers block sound until the page has been clicked once — retry on the first click while hovering
+  addEventListener('pointerdown', () => { if (music.want && music.audio && music.audio.paused) { $('#npText').textContent = MUSIC.songName + ' · ' + MUSIC.artist; playTrack(); } });
+  vinyl.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+  // put the album art on the label once the page has settled
+  addEventListener('load', () => (window.requestIdleCallback || setTimeout)(() => loadMusic(), { timeout: 2500 }));
+
+  /* ── Note corner lift (hover only), modelled on a real sheet whose corner bends up toward you:
+     no back of the page shows — the right edge runs straight then curves in, the bottom edge sweeps up,
+     they meet at a crisp (barely rounded) tip; a soft crease shade runs across the bend and a shadow
+     falls on the mat where the corner used to lie. Flat at rest. ── */
+  const noteCard = $('.card.notepad'), npSheet = $('#npSheet'), liftSh = $('#liftShadow');
+  if (noteCard && npSheet && liftSh && !reduce && matchMedia('(hover: hover)').matches) {
+    const W = 350, H = 293, MAX = 74, f = n => n.toFixed(1);
+    const K = { c: 0, g: 0, raf: 0, t: 0 };
+    const draw = L => {
+      if (L < .5) { npSheet.style.clipPath = ''; liftSh.setAttribute('d', ''); noteCard.style.setProperty('--lk', 0); return; }
+      const tip = [W - .26 * L, H - .05 * L];
+      const outline =
+        `M0 0H${W}V${f(H - L)}` +
+        `C${W} ${f(H - .46 * L)} ${f(W - .12 * L)} ${f(H - .14 * L)} ${f(tip[0])} ${f(tip[1])}` +                         // right edge curls in to a sharp tip
+        `C${f(W - .36 * L)} ${f(H - .025 * L)} ${f(W - .5 * L)} ${H} ${f(W - .66 * L)} ${H}` +                              // bottom edge sweeps up from it
+        `H0Z`;
+      npSheet.style.clipPath = `path('${outline}')`;
+      // shadow on the mat: under the lifted corner, reaching a little beyond where the corner sat
+      liftSh.setAttribute('d', `M${W} ${f(H - .85 * L)}C${f(W + .08 * L)} ${f(H - .3 * L)} ${f(W + .06 * L)} ${f(H + .05 * L)} ${f(W - .1 * L)} ${f(H + .1 * L)}` +
+        `C${f(W - .3 * L)} ${f(H + .1 * L)} ${f(W - .5 * L)} ${f(H + .04 * L)} ${f(W - .62 * L)} ${H}L${f(tip[0])} ${f(tip[1])}Z`);
+      noteCard.style.setProperty('--L', f(L) + 'px'); noteCard.style.setProperty('--lk', Math.min(1, L / 20).toFixed(2));
+    };
+    const step = t => {
+      const dt = Math.min((t - (K.t || t)) / 1000, .05); K.t = t;
+      K.c += (K.g - K.c) * (1 - Math.exp(-dt * 9));
+      draw(K.c);
+      if (Math.abs(K.g - K.c) > .2) K.raf = requestAnimationFrame(step); else { K.c = K.g; draw(K.c); K.raf = 0; K.t = 0; }
+    };
+    const aim = g => { K.g = g; if (!K.raf) K.raf = requestAnimationFrame(step); };
+    noteCard._curl = aim;   // testing: $('.card.notepad')._curl(74)
+    noteCard.addEventListener('pointerenter', () => aim(MAX));
+    noteCard.addEventListener('pointerleave', () => aim(0));
+  }
+
+  /* ── Mat light: the grid lines near the pointer glow, like the heading — only the lines, never the squares ── */
+  const matEl = $('#hero'), glowCv = $('.hero-light');
+  if (matEl && glowCv && !reduce && matchMedia('(hover: hover)').matches) {
+    const ctx = glowCv.getContext('2d');
+    const GAP = 40, OFF = 20, R = 200;                 // grid pitch / first line (matches hero-grid.png) / light radius
+    const G = { x: -1e4, y: -1e4, gx: -1e4, gy: -1e4, k: 0, gk: 0, raf: 0, t: 0, w: 0, h: 0, dpr: 1, dirty: null };
+    const size = () => {
+      G.dpr = Math.min(devicePixelRatio || 1, 2); G.w = matEl.clientWidth; G.h = matEl.offsetHeight;
+      glowCv.width = G.w * G.dpr; glowCv.height = G.h * G.dpr;
+      glowCv.style.width = G.w + 'px'; glowCv.style.height = G.h + 'px';
+      G.dirty = null;
+    };
+    size(); new ResizeObserver(size).observe(matEl);
+    const draw = () => {
+      const { dpr } = G;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (G.dirty) ctx.clearRect(G.dirty[0], G.dirty[1], G.dirty[2], G.dirty[3]);
+      if (G.k < 0.004) { G.dirty = null; return; }
+      const x0 = G.x - R, y0 = G.y - R;
+      G.dirty = [x0 - 12, y0 - 12, R * 2 + 24, R * 2 + 24];
+      const grad = ctx.createRadialGradient(G.x, G.y, 0, G.x, G.y, R);
+      grad.addColorStop(0, `rgba(222,255,230,${0.26 * G.k})`);
+      grad.addColorStop(0.35, `rgba(205,248,216,${0.12 * G.k})`);
+      grad.addColorStop(0.7, `rgba(190,240,204,${0.035 * G.k})`);
+      grad.addColorStop(1, 'rgba(190,240,204,0)');
+      ctx.beginPath();
+      for (let x = OFF + Math.ceil((x0 - OFF) / GAP) * GAP; x <= G.x + R; x += GAP) { ctx.moveTo(x, y0); ctx.lineTo(x, G.y + R); }
+      for (let y = OFF + Math.ceil((y0 - OFF) / GAP) * GAP; y <= G.y + R; y += GAP) { ctx.moveTo(x0, y); ctx.lineTo(G.x + R, y); }
+      ctx.strokeStyle = grad;
+      ctx.lineCap = 'butt';
+      ctx.shadowColor = `rgba(190,255,210,${0.32 * G.k})`; ctx.shadowBlur = 8;   // bloom along the lines
+      ctx.lineWidth = 2; ctx.stroke();
+      ctx.shadowBlur = 0; ctx.lineWidth = 1.2; ctx.stroke();                     // crisp core
+    };
+    const loop = t => {
+      const dt = Math.min((t - (G.t || t)) / 1000, 0.05); G.t = t;
+      const f = 1 - Math.exp(-dt * 9), fk = 1 - Math.exp(-dt * 5);
+      G.x += (G.gx - G.x) * f; G.y += (G.gy - G.y) * f; G.k += (G.gk - G.k) * fk;
+      draw();
+      const busy = Math.abs(G.gx - G.x) + Math.abs(G.gy - G.y) > 0.2 || Math.abs(G.gk - G.k) > 0.003;
+      if (busy) G.raf = requestAnimationFrame(loop); else { G.raf = 0; G.t = 0; }
+    };
+    const kickG = () => { if (!G.raf) G.raf = requestAnimationFrame(loop); };
+    const aimG = e => { const r = matEl.getBoundingClientRect(); G.gx = e.clientX - r.left; G.gy = e.clientY - r.top; kickG(); };
+    matEl.addEventListener('pointerenter', e => { aimG(e); if (G.k < 0.01) { G.x = G.gx; G.y = G.gy; } G.gk = 1; kickG(); });
+    matEl.addEventListener('pointermove', aimG, { passive: true });
+    matEl.addEventListener('pointerleave', () => { G.gk = 0; kickG(); });
+  }
+
+  /* ── Frosted heading: blur the mat behind the letters only. Each word's glyphs are drawn into a canvas,
+     which becomes the mask of a backdrop-blur layer sitting right behind that word. ── */
+  function frostHeading() {
+    $$('#nameWrap > .name:not(.name-lit) .tx').forEach(tx => {
+      let fr = tx.previousElementSibling;
+      if (!fr || !fr.classList.contains('frost')) { fr = document.createElement('i'); fr.className = 'frost'; fr.setAttribute('aria-hidden', 'true'); tx.before(fr); }
+      const cs = getComputedStyle(tx), w = tx.offsetWidth, h = tx.offsetHeight, dpr = Math.min(devicePixelRatio || 1, 2);
+      if (!w || !h) return;
+      const cv = document.createElement('canvas'); cv.width = Math.ceil(w * dpr); cv.height = Math.ceil(h * dpr);
+      const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      if ('letterSpacing' in ctx) ctx.letterSpacing = cs.letterSpacing;
+      const fs = parseFloat(cs.fontSize), m = ctx.measureText(tx.textContent);
+      const asc = m.fontBoundingBoxAscent, desc = m.fontBoundingBoxDescent;
+      const base = parseFloat(cs.paddingTop) + (fs - (asc + desc)) / 2 + asc;     // line-height is 1em
+      ctx.fillText(tx.textContent, parseFloat(cs.paddingLeft), base);
+      const url = `url(${cv.toDataURL()})`;
+      Object.assign(fr.style, { left: tx.offsetLeft + 'px', top: tx.offsetTop + 'px', width: w + 'px', height: h + 'px',
+        webkitMaskImage: url, maskImage: url });
     });
-    addEventListener('pointerdown', () => { if (music.want && music.audio && music.audio.paused) { $('#npText').textContent = MUSIC.songName + ' · ' + MUSIC.artist; playTrack(); } });
+  }
+  if (CSS.supports('backdrop-filter', 'blur(1px)') || CSS.supports('-webkit-backdrop-filter', 'blur(1px)')) {
+    (document.fonts ? document.fonts.ready : Promise.resolve()).then(frostHeading);
+    let frT; addEventListener('resize', () => { clearTimeout(frT); frT = setTimeout(frostHeading, 150); });
+  }
+
+  /* ── Luminous heading: a spotlight that follows the pointer (with a short afterglow); click to switch all lights on ── */
+  const nameWrap = $('#nameWrap');
+  if (nameWrap && !reduce) {
+    const lit = $('.name', nameWrap).cloneNode(true);
+    lit.classList.add('name-lit'); lit.setAttribute('aria-hidden', 'true');
+    nameWrap.appendChild(lit);
+    const L = { x: 0, y: 0, tx: 0, ty: 0, gx: 0, gy: 0, raf: 0, in: false, t: 0 };
+    const loop = t => {
+      const dt = Math.min((t - (L.t || t)) / 1000, 0.05); L.t = t;
+      const f = 1 - Math.exp(-dt * 7), g = 1 - Math.exp(-dt * 2.6);   // frame-rate independent easing: light glides, glow lags
+      L.x += (L.gx - L.x) * f;  L.y += (L.gy - L.y) * f;
+      L.tx += (L.x - L.tx) * g; L.ty += (L.y - L.ty) * g;
+      lit.style.setProperty('--mx', L.x.toFixed(1) + 'px'); lit.style.setProperty('--my', L.y.toFixed(1) + 'px');
+      lit.style.setProperty('--tx', L.tx.toFixed(1) + 'px'); lit.style.setProperty('--ty', L.ty.toFixed(1) + 'px');
+      const settled = Math.abs(L.gx - L.tx) + Math.abs(L.gy - L.ty) < 0.3;
+      if (L.in || !settled) L.raf = requestAnimationFrame(loop); else { L.raf = 0; L.t = 0; }
+    };
+    // pointer position in the lit layer's own box (it extends 48px past the heading for the glow)
+    const at = e => { const r = lit.getBoundingClientRect(); L.gx = e.clientX - r.left; L.gy = e.clientY - r.top; };
+    nameWrap.addEventListener('pointerenter', e => {
+      at(e); if (!L.raf) { L.x = L.tx = L.gx; L.y = L.ty = L.gy; }
+      L.in = true; lit.style.setProperty('--on', 1); if (!L.raf) L.raf = requestAnimationFrame(loop);
+    });
+    nameWrap.addEventListener('pointermove', at);
+    nameWrap.addEventListener('pointerleave', () => { L.in = false; lit.style.setProperty('--on', 0); });
+    nameWrap.addEventListener('click', () => nameWrap.classList.toggle('lights'));
   }
 
   /* ── Pinned pieces: pendulum physics around the pin ── */
@@ -175,11 +312,6 @@
         const now = performance.now(), dt = Math.max(1, now - p.lastT) / 1000;
         p.w = (target - p.a) / dt * 0.35 + p.w * 0.65;          // remember the swing speed for release
         p.a = target; p.lastT = now;
-      } else if (fine && !reduce) {
-        // brushing past the lower part of the card gives it a push
-        const c = pinCenter(p), s = parseFloat(getComputedStyle(root).getPropertyValue('--s')) || 1;
-        const lever = clamp((e.clientY - c.y) / (180 * s), 0, 1.4);
-        p.w = clamp(p.w - clamp(e.movementX, -30, 30) * lever * 0.11, -34, 34);
       }
     });
     const release = () => { p.held = false; p.w = clamp(p.w, -42, 42); p.el.classList.remove('held'); };
@@ -237,7 +369,7 @@
   smiley.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') boom(); });
   $$('.soc').forEach(a => a.addEventListener('click', e => confetti(e.clientX, e.clientY, 22)));
 
-  /* ── Tool stickers: click Figma to fan out Claude + Notion ── */
+  /* ── Tool stack: hover to fan Figma, Claude, Notion and Procreate out in a semicircle ── */
   const stack = $('#stack');
   let stDown = null;
   stack.addEventListener('pointerdown', e => { stDown = { x: e.clientX, y: e.clientY }; });
@@ -245,8 +377,31 @@
     const on = open === undefined ? !stack.classList.contains('open') : open;
     stack.classList.toggle('open', on); stack.setAttribute('aria-expanded', on);
   };
+  // mouse: hovering fans the cards out; touch: a tap toggles them.
+  // A small state machine keeps it either fully open or fully closed: opening waits a beat for intent,
+  // closing waits a beat in case the pointer is just crossing a gap, and after it closes it ignores
+  // re-entry until the cards are home (otherwise the returning pile would re-trigger hover → flicker).
+  const ST = { inside: false, openT: 0, closeT: 0, lockUntil: 0 };
+  const settle = () => {
+    clearTimeout(ST.openT);
+    const wait = Math.max(0, ST.lockUntil - performance.now());
+    ST.openT = setTimeout(() => { if (ST.inside && !stack.classList.contains('open')) toggleStack(true); }, Math.max(70, wait));
+  };
+  stack.addEventListener('pointerenter', e => {
+    if (e.pointerType === 'touch') return;
+    ST.inside = true; clearTimeout(ST.closeT);
+    if (!stack.classList.contains('open')) settle();
+  });
+  stack.addEventListener('pointerleave', e => {
+    if (e.pointerType === 'touch') return;
+    ST.inside = false; clearTimeout(ST.openT); clearTimeout(ST.closeT);
+    ST.closeT = setTimeout(() => {
+      if (ST.inside || !stack.classList.contains('open')) return;
+      toggleStack(false); ST.lockUntil = performance.now() + 380;   // let the cards land before hover can reopen
+    }, 180);
+  });
   stack.addEventListener('pointerup', e => {
-    if (stDown && Math.hypot(e.clientX - stDown.x, e.clientY - stDown.y) < 6) toggleStack();
+    if (e.pointerType === 'touch' && stDown && Math.hypot(e.clientX - stDown.x, e.clientY - stDown.y) < 6) toggleStack();
   });
   stack.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleStack(); } });
   addEventListener('pointerdown', e => { if (!stack.contains(e.target)) toggleStack(false); });
@@ -340,11 +495,15 @@
   const track = $('#track');
   let drag = 0, target = 0, cur = 0, dragging = false;
 
-  const maxShift = () => Math.max(0, track.scrollWidth - rail.clientWidth);
-  const progress = () => {
-    const r = section.getBoundingClientRect();
-    return clamp((innerHeight - r.top) / (innerHeight + r.height), 0, 1);
-  };
+  // measurements are cached (refreshed by observers/scroll) so the per-frame loop never forces a layout
+  let maxS = 0, prog = 0;
+  const measureRail = () => { maxS = Math.max(0, track.scrollWidth - rail.clientWidth); };
+  const measureProg = () => { const r = section.getBoundingClientRect(); prog = clamp((innerHeight - r.top) / (innerHeight + r.height), 0, 1); };
+  new ResizeObserver(measureRail).observe(track); new ResizeObserver(measureRail).observe(rail);
+  addEventListener('scroll', measureProg, { passive: true }); addEventListener('resize', measureProg);
+  measureRail(); measureProg();
+  const maxShift = () => maxS;
+  const progress = () => prog;
   function computeTarget() {
     const base = -progress() * maxShift() * 0.9;
     target = clamp(base + drag, -maxShift(), 60);
@@ -374,9 +533,42 @@
     if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) { drag -= e.deltaX; e.preventDefault(); }
   }, { passive: false });
 
-  // filters
-  $$('.chip').forEach(chip => chip.addEventListener('click', () => {
-    $$('.chip').forEach(c => { c.classList.toggle('is-on', c === chip); c.setAttribute('aria-selected', c === chip); });
+  // ticker arrows: step the rail one card at a time (for anyone who can't or won't drag)
+  const prevBtn = $('.tick.prev'), nextBtn = $('.tick.next');
+  const stepSize = () => { const c = $('.pg:not(.hide)', track); return c ? c.offsetWidth + parseFloat(getComputedStyle(track).columnGap || 80) : 400; };
+  const nudgeRail = dir => {
+    const base = -progress() * maxShift() * 0.9;
+    drag = clamp(drag - dir * stepSize(), -maxShift() - base, 60 - base);
+  };
+  prevBtn.addEventListener('click', () => nudgeRail(-1));
+  nextBtn.addEventListener('click', () => nudgeRail(1));
+  setInterval(() => {   // grey out an arrow at either end
+    prevBtn.setAttribute('aria-disabled', target >= 59); nextBtn.setAttribute('aria-disabled', target <= -maxShift() + 1);
+  }, 250);
+
+  // filters (section tabs): a sliding pill marks the selected tab; arrow keys move between tabs
+  const chipBar = $('.chips'), chipPill = $('.chip-pill'), chips = $$('.chip');
+  const placePill = () => {
+    const on = $('.chip.is-on'); if (!on || !chipPill) return;
+    chipPill.style.width = on.offsetWidth + 'px';
+    chipPill.style.transform = `translateX(${on.offsetLeft}px)`;
+  };
+  placePill(); (document.fonts ? document.fonts.ready : Promise.resolve()).then(placePill); addEventListener('resize', placePill);
+  chipBar.addEventListener('keydown', e => {
+    const i = chips.indexOf(document.activeElement); if (i < 0) return;
+    let j = null;
+    if (e.key === 'ArrowRight') j = (i + 1) % chips.length;
+    else if (e.key === 'ArrowLeft') j = (i - 1 + chips.length) % chips.length;
+    else if (e.key === 'Home') j = 0; else if (e.key === 'End') j = chips.length - 1;
+    if (j === null) return;
+    e.preventDefault(); chips[j].focus(); chips[j].click();
+  });
+  chips.forEach(chip => chip.addEventListener('click', () => {
+    chips.forEach(c => { const on = c === chip; c.classList.toggle('is-on', on); c.setAttribute('aria-selected', on); c.tabIndex = on ? 0 : -1; });
+    placePill();
+    // only scroll the tab bar if the chosen tab is clipped (narrow screens)
+    if (chip.offsetLeft < chipBar.scrollLeft || chip.offsetLeft + chip.offsetWidth > chipBar.scrollLeft + chipBar.clientWidth)
+      chipBar.scrollTo({ left: chip.offsetLeft - 12, behavior: 'smooth' });
     const f = chip.dataset.filter;
     $$('.pg', track).forEach(p => {
       const show = f === 'all' || p.dataset.cat === f;
@@ -384,6 +576,15 @@
     });
     drag = 0;
   }));
+
+  // handling marks: hover/focus show the label (CSS); on touch a tap toggles it
+  const marks = $$('.mark');
+  marks.forEach(m => m.addEventListener('pointerup', e => {
+    if (e.pointerType !== 'touch') return;
+    const open = !m.classList.contains('open');
+    marks.forEach(x => x.classList.remove('open')); m.classList.toggle('open', open);
+  }));
+  addEventListener('pointerdown', e => { if (!e.target.closest('.mark')) marks.forEach(x => x.classList.remove('open')); });
 
   // lightbox
   const lb = $('#lightbox'), lbImg = $('img', lb);
